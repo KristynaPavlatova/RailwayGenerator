@@ -37,18 +37,19 @@ public class MeshBenderToPath : MonoBehaviour
     private List<KeyValuePair<float, float>> tsRolls = new List<KeyValuePair<float, float>>();
 
     
-    
     //GENERATION ----------------------------------------------------------------------------
     public void BendMeshAroundPath(Cinemachine.CinemachineSmoothPath pathStraight, Cinemachine.CinemachineSmoothPath path, bool showGizmos, bool includeRoll, Vector3 parentPosStraight, Vector3 parentPosCurved)
     {
-        this.includeRoll = includeRoll;
-        this.showGizmos = showGizmos;
-        this.pathStraight = pathStraight;
-        this.pathCurved = path;
-        this.parentPosCurved = parentPosCurved;
-        this.parentPosStraight = parentPosStraight;
+        {
+            this.includeRoll = includeRoll;
+            this.showGizmos = showGizmos;
+            this.pathStraight = pathStraight;
+            this.pathCurved = path;
+            this.parentPosCurved = parentPosCurved;
+            this.parentPosStraight = parentPosStraight;
 
-        this.transform.parent.transform.position = parentPosStraight;
+            this.transform.parent.transform.position = parentPosStraight;
+        }
 
         GetMeshAndVertices();
         float cp = pathStraight.FindClosestPoint(meshVertices[0], 0, -1, 20);
@@ -61,6 +62,7 @@ public class MeshBenderToPath : MonoBehaviour
         GetPositionsOnPathFromPathStraight();
         MoveVertices();
 
+        //Assign generated values:
         mesh.SetVertices(newVerts.Select(v => transform.InverseTransformPoint(v)).ToList());//world to local
         mesh.RecalculateBounds();
         this.GetComponent<MeshFilter>().mesh = mesh;

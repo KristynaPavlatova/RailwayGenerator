@@ -6,7 +6,7 @@ using System;
 [ExecuteInEditMode]
 public class ObjectPathPlacer : MonoBehaviour
 {
-    //Script to be placed on an object that will holl all the placed objects.
+    //Script to be placed on an object that will holld all the placed objects.
     
     private Cinemachine.CinemachineSmoothPath path;
     private List<GameObject> objsToPlace;
@@ -36,11 +36,10 @@ public class ObjectPathPlacer : MonoBehaviour
     {
         for (int i = 0; i < numOfObjects; i++)
         {
-            //Position:
             Vector3 pos = path.EvaluatePositionAtUnit((objectSize + distanceBetween) * i, Cinemachine.CinemachinePathBase.PositionUnits.Distance);
             //Rotation + Roll:
             Quaternion orientationAtUnit = path.EvaluateOrientationAtUnit((objectSize + distanceBetween) * i, Cinemachine.CinemachinePathBase.PositionUnits.Distance);
-            //HERE ADJUST ROLL BY INTERPOLATION
+            //TODO: HERE ADJUST ROLL BY INTERPOLATION
             
             //Add random Y rotation offset:
             float randOffsetY = UnityEngine.Random.Range(-rotationOffsetY, rotationOffsetY);

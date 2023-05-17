@@ -20,6 +20,9 @@ public class RailGenerator : MonoBehaviour
     public Cinemachine.CinemachineSmoothPath pathCurved;
     [Tooltip("Cinemachine Smooth path that is straight and serves for correct generation of the railway.")]
     public Cinemachine.CinemachineSmoothPath pathStraight;
+    public bool useCustomLength;
+    [Tooltip("Legth of the cinemachine smooth path. Make shure this corresponds with the legth of the 'pathCurved'.")]
+    public float customPathLength;
 
     [Header("Prefab/Model references:")]
     [Tooltip("Prefab pro kovove casti koleji.")]
@@ -185,7 +188,9 @@ public class RailGenerator : MonoBehaviour
         if (woodHolder.transform.childCount != 0) DeleteWood();
 
         //Make sure the script exists and can be called --> script gets destroyed after generation
-        if (woodHolder.GetComponent<ObjectPathPlacer>() == null) woodHolder.AddComponent<ObjectPathPlacer>();
+        if (woodHolder.GetComponent<ObjectPathPlacer>() == null)
+            woodHolder.AddComponent<ObjectPathPlacer>();
+
         woodHolder.GetComponent<ObjectPathPlacer>().GenerateObjectsOnPath(pathCurved, woodPrefabs, woodDepth, distanceBetweenWoods, rotationOffsetY);
 
     }
@@ -255,6 +260,8 @@ public class RailGenerator : MonoBehaviour
         FindMeshSizes();
 
         pathStraight.m_Waypoints[1].position.z = pathCurved.PathLength;
+        Debug.Log($"TIP: If generated rails have spaces between them, check if the straight path in the 'DONT_TOUCH' obj has the correct PathLegth. If not, pass the correct value to the Z value of its last Waypoint. Repeat until the 'PathLength' says the correct value. (Sorry for the inconvenience, I am not sure why it is not updating automatically.)");
+
     }
     private void CheckReferences()
     {
@@ -299,7 +306,6 @@ public class RailGenerator : MonoBehaviour
         int railsToPlace = (int)(pathStraight.PathLength / railSize);
         for (int i = 0; i < railsToPlace; i++)
         {
-            //Position:
             Vector3 pos = pathStraight.EvaluatePositionAtUnit(railSize * i, Cinemachine.CinemachinePathBase.PositionUnits.Distance);
             //Rotation + Roll:
             Quaternion orientationAtUnit = pathStraight.EvaluateOrientationAtUnit(railSize * i, Cinemachine.CinemachinePathBase.PositionUnits.Distance);
@@ -309,9 +315,10 @@ public class RailGenerator : MonoBehaviour
     }
     private void BendRailMeshes()
     {
-        for (int i = 0; i < railsHolder.transform.childCount; i++)//railPrefab
+        //For each railPrefab
+        for (int i = 0; i < railsHolder.transform.childCount; i++)
         {
-            //Position of the tunnel on the curved path
+            //Position of the tunnel on the curved paths
             Vector3 parentPosCurved = pathCurved.EvaluatePositionAtUnit(railSize * i, Cinemachine.CinemachinePathBase.PositionUnits.Distance);
             Vector3 parentPosStraight = pathStraight.EvaluatePositionAtUnit(railSize * i, Cinemachine.CinemachinePathBase.PositionUnits.Distance);
 
