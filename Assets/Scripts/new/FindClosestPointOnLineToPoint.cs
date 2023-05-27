@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
+[ExecuteAlways]
 public class FindClosestPointOnLineToPoint : MonoBehaviour
 {
     // Gizmos variables
@@ -16,6 +17,9 @@ public class FindClosestPointOnLineToPoint : MonoBehaviour
     public TextMeshPro C;
     [Space(10)]
     public TextMeshPro sidesLengthUI;
+    [Space(10)]
+    public float lerpSpeed = 2.0f;
+    private int _currentPosOfThePoint = 0;
 
     private Vector3 _startPoint;
     private Vector3 _endPoint;
@@ -59,26 +63,72 @@ public class FindClosestPointOnLineToPoint : MonoBehaviour
 
         // Side c
         // length: cos(Alpha) = c / b;
-        float sideCLength = Mathf.Cos(Mathf.Deg2Rad * alphaAngle) * sideBLength;
+        float sideCLength = Mathf.Cos(Mathf.Deg2Rad * alphaAngle) * sideBLength; 
         _sideCLength = sideCLength;
 
         // Side a
         // length: sin(Alpha) = a / b;
-        float sideALength = Mathf.Sin(Mathf.Deg2Rad * alphaAngle) * sideBLength;
+        float sideALength = Mathf.Sin(Mathf.Deg2Rad * alphaAngle) * sideBLength; 
         _sideALength = sideALength;
 
-        Debug.Log($"Alpha = {alphaAngle}, Beta = {betaAngle}, Game = {gamaAngle}, a = {sideALength}, b = {sideBLength}, c = {lineLength}");
-
+        
         if(alphaAngle > 90)
         {
             return lineStartPoint;
-        }else if (sideCLength > lineLength)
+        }else
+        if (sideCLength > lineLength)
         {
             return lineEndPoint;
         }
         else
         {
             return (lineStartPoint + new Vector3(0, 0, sideCLength));
+        }
+    }
+
+    private void Update()
+    {
+        Vector3 lerpPositionOfThePoint = new Vector3(0,0,0);
+        Vector3 lerpEndPosition = new Vector3(0,0,0);
+        switch (_currentPosOfThePoint)
+        {
+            case 0:
+                lerpEndPosition = new Vector3(-2, 0, 2);
+                break;
+            case 1:
+                lerpEndPosition = new Vector3(-3, 0, -2);
+                break;
+            case 2:                
+                lerpEndPosition = new Vector3(-1, 0, 5);
+                break;
+            case 3:
+                lerpEndPosition = new Vector3(1.5f, 0, 2);
+                break;
+            case 4:
+                lerpEndPosition = new Vector3(1, 0, 5);
+                break;
+            case 5:
+                lerpEndPosition = new Vector3(0, 0, 5);
+                break;
+        }
+
+        if(new Vector3(thePoint.x, thePoint.y, thePoint.z) != lerpEndPosition)
+        {
+            lerpPositionOfThePoint = Vector3.Lerp(new Vector3(thePoint.x, thePoint.y, thePoint.z), lerpEndPosition, lerpSpeed);
+            thePoint.x = lerpPositionOfThePoint.x;
+            thePoint.y = lerpPositionOfThePoint.y;
+            thePoint.z = lerpPositionOfThePoint.z;
+        }
+        else
+        {
+            if(_currentPosOfThePoint < 5)
+            {
+                _currentPosOfThePoint++;
+            }else if(_currentPosOfThePoint == 5)
+            {
+                _currentPosOfThePoint = 0;
+            }
+            
         }
     }
 
@@ -92,6 +142,7 @@ public class FindClosestPointOnLineToPoint : MonoBehaviour
             drawLineFromThePointToStartPoint(Color.yellow, gizmosSphereRadius);
             drawTheClosestPoint(Color.red, gizmosSphereRadius);
             drawLineFromStartToClosestPoint(_startPoint, _closestPointOnLine, Color.green);
+            drawLineFromPointToClosestPoint(thePoint, _closestPointOnLine, Color.red);
 
             positionTextAtVerteces();
             updateTextUI();
@@ -126,6 +177,10 @@ public class FindClosestPointOnLineToPoint : MonoBehaviour
         _closestPointOnLine = findClosestPointOnLineToAPoint(_startPoint, _endPoint, thePoint);
         drawGizmoSphere(_closestPointOnLine, radius, color);
     }
+    private void drawLineFromPointToClosestPoint(Vector3 point, Vector3 closestPoint, Color color)
+    {
+        drawGizmosLine(point, closestPoint, color);
+    }
     private void drawLineFromStartToClosestPoint(Vector3 from, Vector3 to, Color color)
     {
         drawGizmosLine(from, to, color);
@@ -137,9 +192,8 @@ public class FindClosestPointOnLineToPoint : MonoBehaviour
         B.transform.position = _closestPointOnLine;
         C.transform.position = thePoint;
     }
-
     private void updateTextUI()
     {
-        sidesLengthUI.text = $"Sides length \n a = {_sideALength}\n b = {_sideBLength}\n c = {_sideCLength}\n";
+        sidesLengthUI.text = $"Side lengths \n a = {_sideALength.ToString("f2")}\n b = {_sideBLength.ToString("f2")}\n c = {_sideCLength.ToString("f2")}\n";
     }
 }
