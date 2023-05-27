@@ -102,6 +102,8 @@ public class MeshBenderToPath : MonoBehaviour
     }
     private void MoveVertices()
     {
+
+
         for (int i = 0; i < meshVertices.Count; i++)
         {
             //Find closest point on the curved path by its position.
