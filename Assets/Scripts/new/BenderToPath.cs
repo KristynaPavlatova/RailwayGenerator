@@ -7,12 +7,15 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class BenderToPath : MonoBehaviour
 {
+    public GameObject objToBend;
     public enum BendType
     {
         FLAT,
         ROUND
     }
     public BendType bendType;
+    public bool instantiateObjOverPathLength = true;
+    public Cinemachine.CinemachineSmoothPath path;
 
     public enum BendingStatus
     {
@@ -23,46 +26,33 @@ public class BenderToPath : MonoBehaviour
     }
     [HideInInspector]
     public BendingStatus bendingStatus = BendingStatus.WAITING_FOR_ACTION;
+    [HideInInspector]
+    public string bendingStatusOutputMessage = "";
     [Space(10)]
     public string saveMeshesTo = "Assets/Art/Meshes/BenderToPath";
     public string savePrefabTo = "Assets/Prefabs/BenderToPath";
 
-    [Space(20)]
-    public GameObject flatPrefab;
-    public GameObject roundPrefab;
-
-    [Space(20)]
-    public GameObject railwayObj;
-    public Cinemachine.CinemachineSmoothPath path;
-
-    [Space(20)]
-    public bool bendingFailed = false;
+    private List<GameObject> pathObjs = new List<GameObject>();
 
     // Gizmos variables
     private Vector3 _startPoint;
     private Vector3 _endPoint;
 
-
     public async Task Bend()
     {
-        //bendingStatus = BendingStatus.IN_PROGRESS;
-        //await Task.Delay(0010);
-        /*if(railwayObj != null)
+        bendingStatus = BendingStatus.IN_PROGRESS;
+        await Task.Delay(0010);
+        if(path != null && objToBend != null)
         {
-            railwayObj.GetComponent<RailGenerator>().GenerateRailway();
+            pathObjs = populatePathWithObjs(instantiateObjOverPathLength);
             bendingStatus = BendingStatus.SUCCESS;
         }
         else
         {
-            Debug.LogError($"{this.name} could not perform bending because there is no path assigned!");
+            bendingStatusOutputMessage = "Bending could not be perform because there is no path assigned or reference to the 'objToBend' is missing!";
+            Debug.LogError($"{bendingStatusOutputMessage}");
             bendingStatus = BendingStatus.FAILED;
-        }*/
-
-        //if(path != null)
-        //{
-        //    createVectorOfPathLength();
-        //}
-        //
+        }
     }
     public async Task Save()
     {
@@ -74,7 +64,6 @@ public class BenderToPath : MonoBehaviour
     {
         bendingStatus = BendingStatus.IN_PROGRESS;
         await Task.Delay(0010);
-        railwayObj.GetComponent<RailGenerator>().DeleteRailway();
         bendingStatus = BendingStatus.WAITING_FOR_ACTION;
     }
 
@@ -85,6 +74,47 @@ public class BenderToPath : MonoBehaviour
         _endPoint = _startPoint + (new Vector3(0,0,1) * path.PathLength);
 
         bendingStatus = BendingStatus.SUCCESS;
+    }
+    private List<GameObject> populatePathWithObjs(bool shouldPopulateEntirePath)
+    {
+        ClearAllChildren(this.transform);//Clear previous population
+
+        List<GameObject> objsOnPath = new List<GameObject>() { objToBend };
+
+        if (shouldPopulateEntirePath)
+        {
+            objsOnPath.Clear();
+            //instantiate objToBend over the path
+            // create vector with length of the path
+            float meshSizeZ = FindMeshSizes(objToBend.transform.GetChild(0).gameObject).z;
+        
+            int objsToPlace = (int)(path.PathLength / meshSizeZ);
+            for (int i = 0; i < objsToPlace; i++)
+            {
+                Vector3 pos = path.transform.position + (new Vector3(0,0,meshSizeZ) * i);
+                objsOnPath.Add(GameObject.Instantiate(objToBend, pos, Quaternion.identity, this.transform));
+            }
+        }
+        return objsOnPath;
+    }
+    private Vector3 FindMeshSizes(GameObject obj)
+    {
+        //TO DO: Get mesh size from the obj that has the renderer on it --> you have to find out!
+        MeshRenderer meshRend = obj.GetComponent<MeshRenderer>();        
+        return new Vector3(meshRend.bounds.size.x, meshRend.bounds.size.y, meshRend.bounds.size.z);
+    }
+    private void ClearAllChildren(Transform inTransform)
+    {
+        if (inTransform.childCount > 0)
+        {
+            while (inTransform.childCount != 0)
+            {
+                foreach (Transform child in inTransform)
+                {
+                    DestroyImmediate(child.gameObject);
+                }
+            }
+        }
     }
 
     // Gizmos methods

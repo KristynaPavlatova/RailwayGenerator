@@ -48,7 +48,7 @@ public class BenderToPathEditor : Editor
             case BenderToPath.BendingStatus.FAILED:
                 GUI.contentColor = Color.red;
                 EditorGUILayout.LabelField($"Status: {myTarget.bendingStatus}", EditorStyles.boldLabel);
-                EditorGUILayout.LabelField("Read the Console for more information.");
+                EditorGUILayout.LabelField($"{myTarget.bendingStatusOutputMessage}", EditorStyles.textArea);
                 GUI.contentColor = Color.white;
 
                 showBendButton = true;
