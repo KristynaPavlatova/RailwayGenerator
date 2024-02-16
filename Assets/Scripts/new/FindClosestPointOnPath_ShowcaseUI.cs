@@ -3,22 +3,29 @@ using TMPro;
 
 public class FindClosestPointOnPath_ShowcaseUI : MonoBehaviour
 {
-    public float lineLength = 7.5f;
+    public float pathLength = 7.5f;
     [Tooltip("The point to which we are calculating the closest point on the line.")]
     public Vector3 thePoint;
 
     [Space(10)]
-    [Header("Gizmos variables:")]
+    [Header("Showcase animation:")]
+    [Tooltip("Turn on animated showcase where the point is moving around based on predefined positions.")]
     public bool turnOnShowcase = false;
+    [Tooltip("Size of the points in the triangle.")]
     public float gizmosSphereRadius = 0.1f;
+    [Tooltip("The speed of the animation.")]
+    [Range(0.0f,5.0f)]
+    public float lerpSpeed = 2.0f;
     [Space(10)]
+    [Header("UI elements:")]
     public TextMeshPro A;
     public TextMeshPro B;
     public TextMeshPro C;
     [Space(10)]
-    public TextMeshPro sidesLengthUI;
-    [Space(10)]
-    public float lerpSpeed = 0.1f;
+    public TextMeshPro sideALengthUI;
+    public TextMeshPro sideBLengthUI;
+    public TextMeshPro sideCLengthUI;
+    [Space(10)]    
     private int _currentPosOfThePoint = 0;
 
     private Vector3 _startPoint;
@@ -117,7 +124,7 @@ public class FindClosestPointOnPath_ShowcaseUI : MonoBehaviour
 
             if (new Vector3(thePoint.x, thePoint.y, thePoint.z) != lerpEndPosition)
             {
-                lerpPositionOfThePoint = Vector3.Lerp(new Vector3(thePoint.x, thePoint.y, thePoint.z), lerpEndPosition, lerpSpeed);
+                lerpPositionOfThePoint = Vector3.Lerp(new Vector3(thePoint.x, thePoint.y, thePoint.z), lerpEndPosition, (lerpSpeed / 100));
                 thePoint.x = lerpPositionOfThePoint.x;
                 thePoint.y = lerpPositionOfThePoint.y;
                 thePoint.z = lerpPositionOfThePoint.z;
@@ -142,7 +149,7 @@ public class FindClosestPointOnPath_ShowcaseUI : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         //displayGizmosLine(_startPoint, _endPoint, Color.blue);
-        if (lineLength > 0)
+        if (pathLength > 0)
         {
             drawTheBaseLine(Color.blue, gizmosSphereRadius);
             drawLineFromThePointToStartPoint(Color.yellow, gizmosSphereRadius);
@@ -168,7 +175,7 @@ public class FindClosestPointOnPath_ShowcaseUI : MonoBehaviour
     private void drawTheBaseLine(Color color, float radius)
     {
         _startPoint = new Vector3(0, 0, 0);
-        _endPoint = _startPoint + (new Vector3(0, 0, 1) * lineLength);
+        _endPoint = _startPoint + (new Vector3(0, 0, 1) * pathLength);
         drawGizmosLine(_startPoint, _endPoint, color);
         drawGizmoSphere(_startPoint, radius, color);
         drawGizmoSphere(_endPoint, radius, color);
@@ -200,6 +207,8 @@ public class FindClosestPointOnPath_ShowcaseUI : MonoBehaviour
     }
     private void updateTextUI()
     {
-        sidesLengthUI.text = $"Side lengths \n a = {_sideALength.ToString("f2")}\n b = {_sideBLength.ToString("f2")}\n c = {_sideCLength.ToString("f2")}\n";
+        sideALengthUI.text = $"a = {_sideALength.ToString("f2")}";
+        sideBLengthUI.text = $"b = {_sideBLength.ToString("f2")}";
+        sideCLengthUI.text = $"c = {_sideCLength.ToString("f2")}";
     }
 }

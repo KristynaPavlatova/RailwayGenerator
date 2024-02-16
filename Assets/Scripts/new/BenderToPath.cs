@@ -14,7 +14,6 @@ public class BenderToPath : MonoBehaviour
         ROUND
     }
     public BendType bendType;
-    public bool instantiateObjOverPathLength = true;
     public Cinemachine.CinemachineSmoothPath path;
 
     public enum BendingStatus
@@ -33,10 +32,14 @@ public class BenderToPath : MonoBehaviour
     public string savePrefabTo = "Assets/Prefabs/BenderToPath";
 
     private List<GameObject> pathObjs = new List<GameObject>();
+    
+    
+    [Range(0.0f, 5.0f)]
+    public float offsetBetweenObjs = 1.0f;
 
     // Gizmos variables
-    private Vector3 _startPoint;
-    private Vector3 _endPoint;
+    //private Vector3 _startPoint;
+    //private Vector3 _endPoint;
 
     public async Task Bend()
     {
@@ -44,7 +47,8 @@ public class BenderToPath : MonoBehaviour
         await Task.Delay(0010);
         if(path != null && objToBend != null)
         {
-            pathObjs = populatePathWithObjs(instantiateObjOverPathLength);
+            placeObjectsOnStraightPath(pathObjs);
+            bendingStatus = (pathObjs.Count > 0) ? BendingStatus.SUCCESS :  BendingStatus.FAILED;
             bendingStatus = BendingStatus.SUCCESS;
         }
         else
@@ -64,44 +68,68 @@ public class BenderToPath : MonoBehaviour
     {
         bendingStatus = BendingStatus.IN_PROGRESS;
         await Task.Delay(0010);
+
+        //Delete gameobjects and references from list
+        ClearAllChildren(this.transform);
+        pathObjs.Clear();
+
         bendingStatus = BendingStatus.WAITING_FOR_ACTION;
     }
 
     // Bending methods
     private void createVectorOfPathLength()
     {
-        _startPoint = transform.TransformPoint(path.m_Waypoints[0].position);
-        _endPoint = _startPoint + (new Vector3(0,0,1) * path.PathLength);
+        //_startPoint = transform.TransformPoint(path.m_Waypoints[0].position);
+        //_endPoint = _startPoint + (new Vector3(0,0,1) * path.PathLength);
 
         bendingStatus = BendingStatus.SUCCESS;
     }
-    private List<GameObject> populatePathWithObjs(bool shouldPopulateEntirePath)
+    private void placeObjectsOnStraightPath(List<GameObject> objsOnPathList)
     {
-        ClearAllChildren(this.transform);//Clear previous population
+        ClearAllChildren(this.transform);//Clear previous population of path objects
+        objsOnPathList.Clear();
 
-        List<GameObject> objsOnPath = new List<GameObject>() { objToBend };
+        //float meshSizeZ = FindMeshSizes(objToBend.transform.GetChild(0).gameObject).z;
+        float meshSizeZ = FindMeshSizeRecursion(objToBend.transform).z;
 
-        if (shouldPopulateEntirePath)
+        // Instantiate copies of objToBend object over the given path
+        int objsToPlace = (int)Math.Ceiling(path.PathLength / (meshSizeZ + offsetBetweenObjs));
+        for (int i = 0; i < objsToPlace; i++)
         {
-            objsOnPath.Clear();
-            //instantiate objToBend over the path
-            // create vector with length of the path
-            float meshSizeZ = FindMeshSizes(objToBend.transform.GetChild(0).gameObject).z;
-        
-            int objsToPlace = (int)(path.PathLength / meshSizeZ);
-            for (int i = 0; i < objsToPlace; i++)
+            Vector3 pos = path.transform.position + (new Vector3(0,0,meshSizeZ + offsetBetweenObjs) * i);
+            objsOnPathList.Add(GameObject.Instantiate(objToBend, pos, Quaternion.identity, this.transform));
+        }
+    }
+    private Vector3 FindMeshSizeRecursion(Transform trans)
+    {
+        Debug.Log($"Finding mesh renderer inside transform {trans.gameObject.name}:");
+
+        Vector3 meshSize = new Vector3(0,0,0);
+
+        MeshRenderer meshRend = trans.GetComponent<MeshRenderer>();
+        if(meshRend)
+        {
+            meshSize = new Vector3(meshRend.bounds.size.x, meshRend.bounds.size.y, meshRend.bounds.size.z);
+            Debug.Log($"Found the mesh size! It is {meshSize}");
+        }
+        else
+        {
+            int numOfChildren = trans.childCount;
+            if (numOfChildren > 0)
             {
-                Vector3 pos = path.transform.position + (new Vector3(0,0,meshSizeZ) * i);
-                objsOnPath.Add(GameObject.Instantiate(objToBend, pos, Quaternion.identity, this.transform));
+                for (int i = 0; i < numOfChildren; i++)
+                {
+                    meshSize = FindMeshSizeRecursion(trans.GetChild(i).transform);
+                    if (meshSize.z != 0)
+                        break;
+                }
+            }
+            else
+            {
+                Debug.LogError($"the transform {trans.gameObject.name} does not have a Mesh Renderer to find out the size of the mesh (Z axis)!");
             }
         }
-        return objsOnPath;
-    }
-    private Vector3 FindMeshSizes(GameObject obj)
-    {
-        //TO DO: Get mesh size from the obj that has the renderer on it --> you have to find out!
-        MeshRenderer meshRend = obj.GetComponent<MeshRenderer>();        
-        return new Vector3(meshRend.bounds.size.x, meshRend.bounds.size.y, meshRend.bounds.size.z);
+        return meshSize;
     }
     private void ClearAllChildren(Transform inTransform)
     {
@@ -118,6 +146,7 @@ public class BenderToPath : MonoBehaviour
     }
 
     // Gizmos methods
+    /*
     private void OnDrawGizmosSelected()
     {
         //displayGizmosLine(_startPoint, _endPoint, Color.blue);
@@ -138,4 +167,5 @@ public class BenderToPath : MonoBehaviour
         Gizmos.color = color;
         Gizmos.DrawSphere(position, radius);
     }
+    */
 }
